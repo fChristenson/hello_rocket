@@ -6,27 +6,37 @@ use std::path::Path;
 
 mod lib;
 
+use self::lib::{bar::Bar, foo::Foo};
+
 #[get("/")]
-fn index() -> NamedFile {
-    NamedFile::open(Path::new("static/foobar.html")).unwrap()
+fn index() -> &'static str {
+    "Hello world!"
 }
 
 #[get("/foo")]
 fn foo() -> Template {
-    let context = lib::foo::Foo {
+    let context = Foo {
         message: "This is the foo page",
     };
     Template::render("index", &context)
 }
 
 #[get("/bar")]
-fn bar() -> Json<lib::bar::Bar> {
-    Json(lib::bar::Bar { bar: 123 })
+fn bar() -> Json<Bar> {
+    Json(Bar {
+        bar: 123,
+        such_wow: "such wow",
+    })
+}
+
+#[get("/static")]
+fn static_file() -> NamedFile {
+    NamedFile::open(Path::new("static/foobar.html")).unwrap()
 }
 
 fn main() {
     rocket::ignite()
-        .mount("/", routes![index, foo, bar])
+        .mount("/", routes![index, foo, bar, static_file])
         .mount("/", StaticFiles::from("static"))
         .attach(Template::fairing())
         .launch();
